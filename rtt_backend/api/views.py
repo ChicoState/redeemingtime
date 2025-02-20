@@ -1,3 +1,4 @@
 from django.shortcuts import render
 
-# Create your views here.
+def invoke(request):
+    return render(request, 'response.json.template')
