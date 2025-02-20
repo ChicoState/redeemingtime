@@ -19,6 +19,6 @@ from django.urls import path
 from api.views import invoke
 
 urlpatterns = [
-    path('api/', invoke),
+    path('', invoke),
     path('admin/', admin.site.urls),
 ]
