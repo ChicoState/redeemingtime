@@ -6,7 +6,7 @@ LABEL name dev_env
 RUN apt update 
 RUN apt install -y python3 python3-pip python3-django
 
-# Use unpriviledged user and copy our directory.
+# Use unprivileged user and copy our directory.
 RUN useradd -m rtt_backend
 USER rtt_backend
 WORKDIR /home/rtt_backend
@@ -15,6 +15,8 @@ ADD . .
 # Avoid having dockerfile itself in test environment.
 RUN rm dockerfile
 
-# What Should be run as CMD?
+# Run the server in the controlled environment as the default action.
+# Use -p 8000:8000/tcp in the run command for server to be accessible. 
+CMD python3 -m manage runserver
 
 
