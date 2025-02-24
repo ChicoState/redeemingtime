@@ -10,13 +10,10 @@ RUN apt install -y python3 python3-pip python3-django
 RUN useradd -m rtt_backend
 USER rtt_backend
 WORKDIR /home/rtt_backend
-ADD . .
-
-# Avoid having dockerfile itself in test environment.
-RUN rm dockerfile
 
 # Run the server in the controlled environment as the default action.
-# Use -p 8000:8000/tcp in the run command for server to be accessible. 
-CMD python3 -m manage runserver
+CMD python3 -m manage runserver 0.0.0.0:8000
+
+# Use run.sh to run the server properly.
 
 
