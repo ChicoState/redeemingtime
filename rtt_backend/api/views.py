@@ -1,5 +1,6 @@
-from django.shortcuts import render
+from django.contrib.auth.models import User
 from django import http
+import secrets
 import json
 
 def err(sc):
@@ -19,16 +20,40 @@ def invoke(request):
                 return err(422)
             needs = dictIn['Needs']
             dictOut = {}
-            if (needs == 'Schedule'):
-                dictOut['Sunday'] = '<Activity>'
-                dictOut['Monday'] = '<Activity>'
-                dictOut['Tuesday'] = '<Activity>'
-                dictOut['Wednesday'] = '<Activity>'
-                dictOut['Thursday'] = '<Activity>'
-                dictOut['Friday'] = '<Activity>'
-                dictOut['Saturday'] = '<Activity>'
+            if (needs == 'Register'):
+                lng = -1
+                while (lng != 0): 
+                    nm = ''
+                    for _ in range(128):
+                        nm += chr(65 + secrets.randbelow(26))
+                    lng = len(User.objects.filter(username=nm))
+                raw = ''
+                for _ in range(100):
+                    raw += chr(65 + secrets.randbelow(26))
+                newClient = User()
+                newClient.username=nm
+                newClient.set_password(raw)
+                newClient.save()
+                dictOut['User'] = nm
+                dictOut['Pass'] = raw
             else:
-                return err(422)
+                if 'User' not in dictIn:
+                    return err(401)
+                inst = User.objects.filter(username=dictIn['User'])
+                if (len(inst) == 0):
+                    return err(401)
+                if inst[0].check_password(dictIn['Pass']) != True:
+                    return err(401)
+                if (needs == 'Schedule'):
+                    dictOut['Sunday'] = '<Activity>'
+                    dictOut['Monday'] = '<Activity>'
+                    dictOut['Tuesday'] = '<Activity>'
+                    dictOut['Wednesday'] = '<Activity>'
+                    dictOut['Thursday'] = '<Activity>'
+                    dictOut['Friday'] = '<Activity>'
+                    dictOut['Saturday'] = '<Activity>'
+                else:
+                    return err(422)
             return http.JsonResponse(dictOut)
         except json.decoder.JSONDecodeError:
             return err(406)
