@@ -1,3 +1,6 @@
 from django.db import models
+from django.contrib.auth.models import User
 
-# Create your models here.
+class ClientData(User):
+    CRED_LENGTH = 128
+    lastRequest = models.IntegerField()
