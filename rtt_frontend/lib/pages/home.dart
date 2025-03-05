@@ -82,11 +82,11 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.white,
                 ),
                 onPressed: () {
-                  print('temp:sharepage has been pressed');
-                  /*Navigator.push(
+                  //print('temp:sharepage has been pressed');
+                  Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const SharePage()),
-                  );*/
+                  );
                 },
               ),
             )
@@ -118,6 +118,10 @@ class _HomePageState extends State<HomePage> {
                   ),
 
             const SizedBox(height: 20),
+            const Text(
+              'See topright to send to friends! :)',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
 
             
           ],

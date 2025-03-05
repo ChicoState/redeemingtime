@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-
+import 'home.dart';
 class SecondPage extends StatefulWidget {
   const SecondPage({super.key});
 
@@ -57,7 +57,6 @@ class _SecondPageState extends State<SecondPage> {
     }
   }
 
-  // Add goal with date
   void _addGoal() {
   if (_goalController.text.isNotEmpty && _selectedDate != null && _goals.length < 10) {
     setState(() {
@@ -69,7 +68,7 @@ class _SecondPageState extends State<SecondPage> {
       _selectedDate = null;
     });
 
-    _saveGoals().then((_) => _loadGoals()); // Load after saving
+    _saveGoals().then((_) => _loadGoals());
   }
 }
 
@@ -116,7 +115,6 @@ void _removeGoal(int index) {
 
             const SizedBox(height: 10),
 
-            // Date Picker Button
             Row(
               children: [
                 Text(
@@ -130,7 +128,7 @@ void _removeGoal(int index) {
                   onPressed: _pickDate,
                   child: const Text('Pick Date'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green, // Set button color to green
+                    backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
                   )
                 ),
@@ -139,19 +137,17 @@ void _removeGoal(int index) {
 
             const SizedBox(height: 20),
 
-            // Add Goal Button
             ElevatedButton(
               onPressed: _addGoal,
               child: const Text('Add Goal'),
               style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green, // Set button color to green
+                    backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
                   )
             ),
 
             const SizedBox(height: 20),
 
-            // Goals List
             Expanded(
               child: ListView.builder(
                 itemCount: _goals.length,
@@ -167,14 +163,6 @@ void _removeGoal(int index) {
                   );
                 },
               ),
-            ),
-
-            // Go Back Button
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Go Back'),
             ),
           ],
         ),
