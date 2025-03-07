@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'home.dart';
-class SecondPage extends StatefulWidget {
-  const SecondPage({super.key});
+
+class GoalPage extends StatefulWidget {
+  const GoalPage({super.key});
 
   @override
-  State<SecondPage> createState() => _SecondPageState();
+  State<GoalPage> createState() => _GoalPageState();
 }
 
-class _SecondPageState extends State<SecondPage> {
+class _GoalPageState extends State<GoalPage> {
   final TextEditingController _goalController = TextEditingController();
   List<Map<String, String>> _goals = [];
   DateTime? _selectedDate;
@@ -20,7 +21,6 @@ class _SecondPageState extends State<SecondPage> {
     _loadGoals();
   }
 
-  // Load goals from SharedPreferences
   Future<void> _loadGoals() async {
     final prefs = await SharedPreferences.getInstance();
     final String? savedGoals = prefs.getString('goals');
@@ -34,14 +34,12 @@ class _SecondPageState extends State<SecondPage> {
     }
   }
 
-  // Save goals to SharedPreferences
   Future<void> _saveGoals() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('goals', jsonEncode(_goals));
     print('Goals saved: $_goals');
   }
 
-  // Show date picker and set selected date
   Future<void> _pickDate() async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -77,7 +75,7 @@ void _removeGoal(int index) {
     _goals.removeAt(index);
   });
 
-  _saveGoals().then((_) => _loadGoals()); // Load after saving
+  _saveGoals().then((_) => _loadGoals());
 }
 
   @override
@@ -91,6 +89,20 @@ void _removeGoal(int index) {
           fontSize: 30,
           color: Colors.white,
           fontWeight: FontWeight.bold,
+        ),
+        leading: 
+        IconButton(
+          icon: const Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+              ),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const HomePage()),
+              );
+            },
         ),
       ),
       body: Padding(

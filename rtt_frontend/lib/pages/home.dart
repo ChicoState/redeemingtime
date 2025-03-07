@@ -1,39 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'secondpage.dart';
+import 'goalpage.dart';
 import 'sharepage.dart';
+
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
-
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   List<Map<String, String>> _todayGoals = [];
-
   @override
   void initState() {
     super.initState();
     _loadTodayGoals();
   }
-
-  // Load and filter today's goals
   Future<void> _loadTodayGoals() async {
     final prefs = await SharedPreferences.getInstance();
     final String? savedGoals = prefs.getString('goals');
-
     if (savedGoals != null) {
       List<Map<String, String>> allGoals = List<Map<String, String>>.from(
         jsonDecode(savedGoals).map((goal) => Map<String, String>.from(goal))
       );
-
-      // Get today's date in YYYY-MM-DD format
       String todayDate = DateTime.now().toIso8601String().split('T')[0];
-
-      // Filter goals for today
       List<Map<String, String>> todayGoals = allGoals.where((goal) {
         return goal['date'] == todayDate;
       }).toList();
@@ -43,7 +36,6 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,24 +49,24 @@ class _HomePageState extends State<HomePage> {
           fontWeight: FontWeight.bold,
         ),
         leading: 
-          // Button in AppBar to go to SecondPage
           IconButton(
             icon: const Icon(
               Icons.add,
               color: Colors.white,
               ),
             onPressed: () {
+              Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SecondPage()),
+                MaterialPageRoute(builder: (context) => const GoalPage()),
               );
             },
           ),
           actions: [
             Container(
-              padding: const EdgeInsets.all(8.0), // Add padding around the button
+              padding: const EdgeInsets.all(8.0),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8), // Optional: Rounded corners
+                borderRadius: BorderRadius.circular(8),
               ),
               child: IconButton(
                 icon: const Icon(
@@ -82,7 +74,6 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.white,
                 ),
                 onPressed: () {
-                  //print('temp:sharepage has been pressed');
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const SharePage()),
@@ -102,7 +93,6 @@ class _HomePageState extends State<HomePage> {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-
             _todayGoals.isEmpty
                 ? const Text('No goals for today!', style: TextStyle(fontSize: 18))
                 : Expanded(
@@ -122,8 +112,6 @@ class _HomePageState extends State<HomePage> {
               'See topright to send to friends! :)',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-
-            
           ],
         ),
       ),

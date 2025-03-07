@@ -1,20 +1,32 @@
-/*import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-class sendTo {
-  final String baseUrl = "http://your-backend-url.com/api"; //discover this
+class ApiService {
+  final String baseUrl = 'http://your-backend-url.com/api';
+}
 
-  Future<bool> shareStatus(List<String?> goals, List<String?> usernames) async {
-  
-  if(goals != null or usernames != null)
-
-
-  final response = await http.post(
-    Uri.parse('$baseUrl/items'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({'name': name, 'quantity': quantity}),
-  );
-  return response.statusCode == 201;
-  }
-}*/
+//Eventual json formatting...
+/*
+{
+  "date": "2025-03-06",
+  "username": Christian-U,
+  "friends": [
+    {
+      "username": Trevor-S,
+      "phonenumber": ***-***-****,
+      "goals": [
+        { "goal_id": 1, "title": "Morning workout", "completed_at": "07:30 AM" },
+        { "goal_id": 2, "title": "Read 10 pages", "completed_at": "09:15 AM" }
+      ]
+    },
+    {
+      "username": Jesus-V,
+      "phonenumber": "Bob",
+      "goals": [
+        { "goal_id": 1, "title": "Morning workout", "completed_at": "07:30 AM" },
+        { "goal_id": 2, "title": "Read 10 pages", "completed_at": "09:15 AM" }
+      ]
+    }
+  ]
+}
+*/

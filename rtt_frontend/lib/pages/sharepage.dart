@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+//import 'package:http/http.dart' as http;
+//import 'dart:convert';
+import 'home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 //impliment this...
@@ -24,15 +25,15 @@ class _SharePageState extends State<SharePage> {
   Future<void> _loadFriends() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      usernames = prefs.getStringList('usernames') ?? []; // Load stored usernames
+      usernames = prefs.getStringList('usernames') ?? [];
     });
   }
 
   Future<void> addUsername(String username) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    usernames.add(username); // Add new username to list
-    await prefs.setStringList('usernames', usernames); // Save list in storage
-    setState(() {}); // Refresh UI
+    usernames.add(username);
+    await prefs.setStringList('usernames', usernames);
+    setState(() {});
   }
 
   Future<void> clearUsernames() async {
@@ -57,6 +58,20 @@ class _SharePageState extends State<SharePage> {
           color: Colors.white,
           fontWeight: FontWeight.bold,
         ),
+        leading: 
+        IconButton(
+          icon: const Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+              ),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const HomePage()),
+              );
+            },
+        ),
           actions: [
             Container(
               padding: const EdgeInsets.all(8.0),
@@ -69,16 +84,12 @@ class _SharePageState extends State<SharePage> {
                   color: Colors.white,
                 ),
                 onPressed: () {
-                  print('temp: sent button pressed'); //make api for this (send_status.dart)
+                  print('temp: Sent button pressed'); //api implimentation required
                 },
               ),
             )
           ]
       ),
-
-
-
-
       body: Column(
         children: [
           Padding(
@@ -116,7 +127,12 @@ class _SharePageState extends State<SharePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: clearUsernames,
-        child: Icon(Icons.delete),
+        backgroundColor: Colors.green,
+        child: 
+        Icon(
+          Icons.person_remove,
+          color: Colors.white,
+          ),
         tooltip: "Clear All",
       ),
     );
