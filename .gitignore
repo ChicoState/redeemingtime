@@ -1,0 +1,3 @@
+__pycache__
+rtt_backend/api/migrations/*.py
+db.sqlite3
