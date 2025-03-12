@@ -15,16 +15,14 @@ def _stat(sc):
 
 # Actual Inner Task Functions
 
-def _schedule(input):
+def _schedule(dictin):
     return _stat(200)
 
 # Select task based on needs.
 
 def _task(dictIn):
-    # All tasks can assume there is 'Input' in dictIn.
     # What They Want
     needs = dictIn['Needs']
-    input = dictIn['Input']
     # Output goes here.
     dictOut = {}
     # Select task based on need.
@@ -32,7 +30,7 @@ def _task(dictIn):
         return _stat(200)
     elif (needs == 'Schedule'):
         # Wants to Store Schedule
-        dictOut = _schedule(input)
+        dictOut = _schedule(dictIn)
     else:
         # I don't know what you want.
         return _stat(422)
@@ -75,9 +73,6 @@ def _ingest(dictIn):
     if (not user):
         return _stat(401)
     # Good Credentials
-    # We will need an input to do a task, though.
-    if ('Input' not in dictIn):
-        return _stat(422)
     # Select the task based on needs.
     return _task(dictIn)
 

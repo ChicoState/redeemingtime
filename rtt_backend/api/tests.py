@@ -63,28 +63,22 @@ class RequestTestCase(TestCase):
         self.basic(200, 1, {'Needs':'Register', 'Username': RequestTestCase.USER, 'Password': RequestTestCase.PASS})
     def test_incompleteUserJSONPostOne(self):
         # No Credentials in Authentication
-        self.authenticated(401, {'Needs':'Test', 'Input': {}})
+        self.authenticated(401, {'Needs':'Test'})
     def test_incompleteUserJSONPostTwo(self):
         # No Password Provided in Credentials
-        self.authenticated(401, {'Needs':'Test', 'Input': {}, 'Username': RequestTestCase.USER})
+        self.authenticated(401, {'Needs':'Test', 'Username': RequestTestCase.USER})
     def test_incompleteUserJSONPostThree(self):
         # No Username Provided in Credentials
-        self.authenticated(401, {'Needs':'Test', 'Input': {}, 'Password': RequestTestCase.PASS})
+        self.authenticated(401, {'Needs':'Test', 'Password': RequestTestCase.PASS})
     def test_badUserJSONPostOne(self):
         # Bad Credentials
-        self.authenticated(401, {'Needs':'Test', 'Input': {}, 'Username': 'Gibberish', 'Password':'Gibberish'})
+        self.authenticated(401, {'Needs':'Test', 'Username': 'Gibberish', 'Password':'Gibberish'})
     def test_badUserJSONPostTwo(self):
         # Bad Password
-        self.authenticated(401, {'Needs':'Test', 'Input': {}, 'Username': 'Gibberish', 'Password': RequestTestCase.PASS})
+        self.authenticated(401, {'Needs':'Test', 'Username': 'Gibberish', 'Password': RequestTestCase.PASS})
     def test_badUserJSONPostThree(self):
         # Bad Username
-        self.authenticated(401, {'Needs':'Test', 'Input': {}, 'Username': RequestTestCase.USER, 'Password':'Gibberish'})
-    def test_existingUserBadJSONPost(self):
-        # Good Credentials, Bad Input
-        self.authenticated(422, {'Needs':'Test', 'Username': RequestTestCase.USER, 'Password': RequestTestCase.PASS})
-    def test_existingUserGoodJSONPostOne(self):
-        # Good Credentials, Bad Input
-        self.authenticated(200, {'Needs':'Test', 'Input': 'Something', 'Username': RequestTestCase.USER, 'Password': RequestTestCase.PASS})
-    def test_existingUserGoodJSONPostTwo(self):
+        self.authenticated(401, {'Needs':'Test', 'Username': RequestTestCase.USER, 'Password':'Gibberish'})
+    def test_existingUserGoodJSONPost(self):
         # Good Credentials, Good Input
-        self.authenticated(200, {'Needs':'Test', 'Input': {'a': 'b'}, 'Username': RequestTestCase.USER, 'Password': RequestTestCase.PASS})
+        self.authenticated(200, {'Needs':'Test', 'Username': RequestTestCase.USER, 'Password': RequestTestCase.PASS})
