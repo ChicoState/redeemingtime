@@ -1,10 +1,9 @@
 # Base and Name
-FROM debian AS make
+FROM python AS make
 LABEL name dev_env
 
 # Install Python and Django
-RUN apt update 
-RUN apt install -y python3 python3-pip python3-django
+RUN pip install Django djangorestframework
 
 # Use unprivileged user and copy our directory.
 RUN useradd -m rtt_backend
