@@ -21,6 +21,7 @@ import api.views
 
 apiRouter = routers.DefaultRouter()
 apiRouter.register(r'goals', api.views.GoalViews)
+
 urlpatterns = [
     path('', include(apiRouter.urls)),
     path('register', api.views.UserView.as_view()),
