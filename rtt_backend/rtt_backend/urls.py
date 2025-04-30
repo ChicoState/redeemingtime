@@ -24,6 +24,7 @@ apiRouter.register(r'goals', views.GoalViews)
 
 urlpatterns = [
     path('', include(apiRouter.urls)),
+    path('friends/', views.FriendView.as_view()),
     path('register/', views.UserView.as_view()),
     path('admin/', admin.site.urls),
 ]

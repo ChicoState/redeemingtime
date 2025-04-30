@@ -14,3 +14,8 @@ class Goal(models.Model):
     tag = models.CharField(max_length=HEADER_LENGTH)
     class Meta():
         unique_together = ['owner', 'name', 'weekday']
+
+# Note that this is one way. Treat one way only as a request to the recipient and treat both ways as a full friendship in frontend.
+class FriendTree(models.Model):
+    root = models.OneToOneField(User, to_field='username', related_name="user_root", on_delete=models.DO_NOTHING)
+    leaves = models.ManyToManyField(to=User, related_name="user_leaves")
