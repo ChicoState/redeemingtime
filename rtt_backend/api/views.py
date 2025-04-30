@@ -1,4 +1,4 @@
-from api.serializers import UserSerializer, GoalWriteSerializer, GoalReadSerializer, FriendTreeSerializer
+from api.serializers import UserSerializer, GoalWriteSerializer, GoalReadSerializer
 from rest_framework import status, viewsets, views
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
