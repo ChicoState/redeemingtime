@@ -12,7 +12,7 @@ class GoalsClass {
   String goal;
   double timeCost;
   int weekDay;
-  //int tag;
+  int tag;
   bool completed = false;
   //int tag = 0; //0-4 [social, blitz, academic, workout, affirmations]
   //constructor
@@ -20,6 +20,7 @@ class GoalsClass {
     required this.goal,
     required this.timeCost,
     required this.weekDay,
+    required this.tag,
   });
 }
 

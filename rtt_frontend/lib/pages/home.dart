@@ -3,6 +3,7 @@ import '../classes.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'goalpage.dart';
 import 'profiles.dart';
+import 'login.dart';
 
 class HomePage extends StatefulWidget {
   final UserClass user;
@@ -21,16 +22,6 @@ class _HomePageState extends State<HomePage> {
     super.initState();
   }
 
-  void submitCompleted() {
-    List<GoalsClass> completed = [];
-    for (GoalsClass goal in _todayGoals) {
-      if (goal.completed == true) {
-        completed.add(goal);
-      }
-    }
-    //call api weekend ----------------
-  }
-
   void _loadTodayGoals() {
     int today = DateTime.now().weekday;
     List<GoalsClass> tempGoals = [];
@@ -46,6 +37,33 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<void> _confirmLogout() async {
+    bool? shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Logout"),
+        content: const Text("Are you sure you want to log out?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Logout"),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout == true) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,42 +71,41 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: const Color.fromARGB(255, 48, 112, 76),
         title: const Text('RTT'),
         centerTitle: true,
-        titleTextStyle: TextStyle(
+        titleTextStyle: const TextStyle(
           fontSize: 30,
           color: Colors.white,
           fontWeight: FontWeight.bold,
         ),
-        leading: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(6.0),
-              child: IconButton(
-                onPressed: () {
-                  Navigator.pop(context); // First, go back
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => GoalPage(user: widget.user),
-                    ),
-                  ); // Then, navigate to GoalPage
-                },
-                icon: Icon(
-                  Icons.edit,
-                  color: Colors.white,
-                ), // use bar_chart for the next icon for stat page
-              ),
-            ),
-            Container(
-              //other icons...
-            ),
-          ],
+        leading: Container(
+          padding: const EdgeInsets.all(6.0),
+          child: IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => GoalPage(user: widget.user),
+                ),
+              );
+            },
+            icon: const Icon(Icons.edit, color: Colors.white),
+            tooltip: 'Goals',
+          ),
         ),
         actions: [
           Container(
-            padding: EdgeInsets.all(6.0),
+            padding: const EdgeInsets.all(6.0),
+            child: IconButton(
+              onPressed: _confirmLogout, //logout confirm
+              icon: const Icon(Icons.logout, color: Colors.white),
+              tooltip: 'Logout',
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(6.0),
             child: IconButton(
               onPressed: () {
-                Navigator.pop(context); // First, go back
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -96,16 +113,18 @@ class _HomePageState extends State<HomePage> {
                   ),
                 );
               },
-              icon: Icon(Icons.people, color: Colors.white),
+              icon: const Icon(Icons.people, color: Colors.white),
+              tooltip: 'Profile',
             ),
           ),
           Container(
-            padding: EdgeInsets.all(6.0),
+            padding: const EdgeInsets.all(6.0),
             child: IconButton(
               onPressed: () {
-                //newpage
+                // Future: open menu
               },
-              icon: Icon(Icons.menu, color: Colors.white),
+              icon: const Icon(Icons.menu, color: Colors.white),
+              tooltip: 'Menu',
             ),
           ),
         ],
@@ -115,9 +134,9 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               '10-Week Statistics...',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -127,52 +146,43 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.all(32.0),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(
-                  16.0,
-                ), // Adjust radius as needed
+                borderRadius: BorderRadius.circular(16.0),
               ),
               child: BarChartWidget(
                 data: widget.user.weeklyHoursStats,
-              ), // Sample data
+              ),
             ),
-            Text(
+            const Text(
               'Daily Goals...',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
             const SizedBox(height: 10),
-
-            // Use _todayGoals directly, removing Builder and the redundant list
             _todayGoals.isEmpty
                 ? const Text(
-                  'No goals set for today!',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                )
+                    'No goals set for today!',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  )
                 : Expanded(
-                  child: ListView.builder(
-                    itemCount: _todayGoals.length,
-                    itemBuilder: (context, index) {
-                      return DailyGoalTile(goal: _todayGoals[index]);
-                    },
+                    child: ListView.builder(
+                      itemCount: _todayGoals.length,
+                      itemBuilder: (context, index) {
+                        return DailyGoalTile(goal: _todayGoals[index]);
+                      },
+                    ),
                   ),
-                ),
             Center(
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(
-                    255,
-                    48,
-                    112,
-                    76,
-                  ), // Background color
-                  borderRadius: BorderRadius.circular(10), // Rounded corners
+                  color: const Color.fromARGB(255, 48, 112, 76),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: ElevatedButton(
                   onPressed: () {
-                    //call submit function
+                    // Future: submit goals
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
@@ -181,17 +191,14 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 24,
-                    ),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                     child: Text(
                       "Submit",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white, // Text color
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -254,7 +261,7 @@ class _DailyGoalTileState extends State<DailyGoalTile> {
             _isCompleted ? Icons.check_box : Icons.check_box_outline_blank,
             color: _isCompleted ? Colors.white : Colors.white,
           ),
-          onPressed: _toggleCompletion, // Toggle the checkbox on click
+          onPressed: _toggleCompletion,
         ),
       ),
     );
@@ -284,15 +291,7 @@ class BarChartWidget extends StatelessWidget {
               sideTitles: SideTitles(showTitles: true, reservedSize: 40),
             ),
             bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: false,
-                getTitlesWidget: (value, meta) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text("Week ${value.toInt() + 1}"),
-                  );
-                },
-              ),
+              sideTitles: SideTitles(showTitles: false),
             ),
           ),
         ),
