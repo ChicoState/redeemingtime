@@ -39,6 +39,9 @@ class GoalViews(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         else:
             return super().list(self, request)
+    def destroy(self, request, pk):
+        queryset = Goal.objects.filter(owner=request.user).filter()
+        return super().destroy(self, request, pk)
 
 class FriendView(views.APIView):
     def get(self, request):

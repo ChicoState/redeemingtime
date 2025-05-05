@@ -17,11 +17,12 @@ HEADER_LENGTH = 50
 
 class Goal(models.Model):
     owner = models.ForeignKey(User, to_field='username', on_delete=models.CASCADE)
-    name = models.CharField(max_length=HEADER_LENGTH)
+    name = models.CharField(primary_key=True, max_length=HEADER_LENGTH)
     description = models.CharField(max_length=HEADER_LENGTH*5)
     timeCost = models.IntegerField() # In Minutes
     weekday = models.CharField(max_length=WEEK_LENGTH, validators=[weekStringValidator]) # Should be seven characters selected from # for a selected weekday and . for an unselected one.
-    tag = models.CharField(max_length=HEADER_LENGTH)
+    completed = models.BooleanField(default=False)
+    tag = models.CharField(max_length=HEADER_LENGTH, null=True, default=None)
     class Meta():
         unique_together = ['owner', 'name', 'weekday']
 
