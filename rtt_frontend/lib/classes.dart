@@ -13,7 +13,7 @@ class GoalsClass {
   double timeCost;
   int weekDay;
   int tag;
-  bool completed = false;
+  bool completed;
   //int tag = 0; //0-4 [social, blitz, academic, workout, affirmations]
   //constructor
   GoalsClass({
@@ -21,6 +21,7 @@ class GoalsClass {
     required this.timeCost,
     required this.weekDay,
     required this.tag,
+    this.completed = false,
   });
 }
 
