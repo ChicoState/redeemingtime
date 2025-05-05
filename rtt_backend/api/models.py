@@ -1,17 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core import validators
-
-WEEK_LENGTH = 7
-
-class weekStringValidator(validators.MinLengthValidator):
-    def __init__(self):
-        super.__init__(self, WEEK_LENGTH)
-    def validate(self, string):
-        super.validate(self, string)
-        for char in string:
-            if not(char == '.' or char == '#'):
-                raise validators.ValidationError
 
 HEADER_LENGTH = 50
 
@@ -20,7 +8,7 @@ class Goal(models.Model):
     name = models.CharField(primary_key=True, max_length=HEADER_LENGTH)
     description = models.CharField(max_length=HEADER_LENGTH*5)
     timeCost = models.IntegerField() # In Minutes
-    weekday = models.CharField(max_length=WEEK_LENGTH, validators=[weekStringValidator]) # Should be seven characters selected from # for a selected weekday and . for an unselected one.
+    weekday = models.CharField() # Should be seven characters selected from # for a selected weekday and . for an unselected one.
     completed = models.BooleanField(default=False)
     tag = models.CharField(max_length=HEADER_LENGTH, null=True, default=None)
     class Meta():
