@@ -3,23 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../classes.dart'; // Needed to build UserClass
 import 'home.dart';       // Navigate to HomePage after login
-
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
-
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  bool _isLoading = false;
-  bool _obscurePassword = true;
-
-  final String baseUrl = "http://localhost:8000"; // For Chrome testing
-
-  Future<List<GoalsClass>> fetchGoals(String username, String password) async {
+final String baseUrl = "http://localhost:8000"; // For Chrome testing
+Future<List<GoalsClass>> fetchGoals(String username, String password) async {
     String basicAuth = 'Basic ' + base64Encode(utf8.encode('$username:$password'));
 
     final response = await http.get(
@@ -37,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
         timeCost: (goal['timeCost'] ?? 0).toDouble(),
         weekDay: (goal['weekday'] ?? 1),
         tag: 0,                         // Default tag for now
+        completed: goal['completed'] ?? false,  // Default to false if not provided
       )).toList();
 
       return goals;
@@ -46,6 +32,23 @@ class _LoginScreenState extends State<LoginScreen> {
       throw Exception("Failed to load goals from server");
     }
   }
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+
+ 
+
+  
 
   void _saveCredentialsAndNavigate() async {
     final username = _usernameController.text;
@@ -168,88 +171,98 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text(
-                "Welcome to RTT!",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                "Keep your data safe",
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 40),
-              _buildTextField(
-                controller: _usernameController,
-                label: "Username",
-                obscureText: false,
-              ),
-              const SizedBox(height: 20),
-              _buildTextField(
-                controller: _passwordController,
-                label: "Password",
-                obscureText: _obscurePassword,
-                isPasswordField: true,
-              ),
-              const SizedBox(height: 30),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : Column(
-                      children: [
-                        ElevatedButton(
-                          onPressed: _saveCredentialsAndNavigate,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.yellow[700],
-                            minimumSize: const Size.fromHeight(50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: const Text(
-                            "LOGIN",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 15),
-                        ElevatedButton(
-                          onPressed: _register,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            minimumSize: const Size.fromHeight(50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: const Text(
-                            "CREATE USER",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-            ],
+      body: Column(
+        children: [
+          // Green rectangle at the top
+          Container(
+            height: 50, // Adjust height as needed
+            color: const Color.fromARGB(255, 48, 112, 76), // Green color
           ),
-        ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Welcome to RTT!",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    "Keep track of your goals",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  _buildTextField(
+                    controller: _usernameController,
+                    label: "Username",
+                    obscureText: false,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildTextField(
+                    controller: _passwordController,
+                    label: "Password",
+                    obscureText: _obscurePassword,
+                    isPasswordField: true,
+                  ),
+                  const SizedBox(height: 30),
+                  _isLoading
+                      ? const CircularProgressIndicator()
+                      : Column(
+                          children: [
+                            ElevatedButton(
+                              onPressed: _saveCredentialsAndNavigate,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.yellow[700],
+                                minimumSize: const Size.fromHeight(50),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+                              child: const Text(
+                                "LOGIN",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            ElevatedButton(
+                              onPressed: _register,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color.fromARGB(255, 48, 112, 76),
+                                minimumSize: const Size.fromHeight(50),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+                              child: const Text(
+                                "CREATE USER",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
