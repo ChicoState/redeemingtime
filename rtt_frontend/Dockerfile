@@ -1,9 +1,6 @@
 # Base and Name
-FROM python AS make
-LABEL name dev_env
-
-# Install Python and Django
-RUN pip install Django djangorestframework
+FROM ubuntu AS make
+LABEL name dev_env_frontend
 
 # Install Flutter
 RUN git clone https://github.com/flutter/flutter.git /opt/flutter
@@ -16,6 +13,6 @@ RUN useradd -m rtt
 USER rtt
 WORKDIR /home
 
-# Run the server in the controlled environment as the default action.
-CMD python3 -m manage makemigrations && python3 -m manage migrate && python3 -m manage runserver 0.0.0.0:8000 && flutter run -d web-server --web-port=8001
+# Run in the controlled environment as the default action.
+CMD flutter run -d web-server --web-port=8001
 # Use the script to run the server properly.
