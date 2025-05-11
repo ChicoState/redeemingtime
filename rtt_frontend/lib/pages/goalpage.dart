@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../classes.dart';
 import 'home.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class GoalPage extends StatefulWidget {
   final UserClass user;
@@ -25,9 +27,84 @@ class _GoalPageState extends State<GoalPage> {
     });
   }
 
-  void _saveChanges() {
-    widget.user.weeklyGoals = _goals;
-    //use api to update server with new schedule//
+  Future<void> saveGoalToServer(GoalsClass goal) async {
+    final String baseUrl = "http://localhost:8000";
+    final String username = widget.user.username;
+    final String password = widget.user.password;
+
+    String basicAuth = 'Basic ' + base64Encode(utf8.encode('$username:$password'));
+
+    final response = await http.post(
+      Uri.parse("$baseUrl/goals/"),
+      headers: {
+        "Authorization": basicAuth,
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "name": goal.goal,
+        "description": goal.goal,
+        "timeCost": (goal.timeCost*60).toInt(),
+        "weekday": goal.weekDay,
+        "completed": goal.completed,
+        "tag": "none",
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print("Goal saved: ${goal.goal}");
+    } else if (response.statusCode == 406) {
+      print("Duplicate goal, skipped: ${goal.goal}");
+    } else {
+      throw Exception("Failed to save goal: ${goal.goal}");
+    }
+  }
+
+  Future<void> deleteGoalFromServer(GoalsClass goal) async {
+    final String baseUrl = "http://localhost:8000";
+    final String username = widget.user.username;
+    final String password = widget.user.password;
+
+    String basicAuth = 'Basic ' + base64Encode(utf8.encode('$username:$password'));
+    final encodedGoalName = Uri.encodeComponent(goal.goal);
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/goals/$encodedGoalName/'),
+      headers: {
+        "Authorization": basicAuth,
+      },
+    );
+
+    if (response.statusCode == 204) {
+      print("Goal deleted: ${goal.goal}");
+    } else {
+      print("Failed to delete goal: ${goal.goal}, Status: ${response.statusCode}");
+    }
+  }
+
+  void _saveChanges() async {
+    int successful = 0;
+    int skipped = 0;
+
+    try {
+      for (GoalsClass goal in _goals) {
+        try {
+          await saveGoalToServer(goal);
+          successful++;
+        } catch (e) {
+          skipped++;
+        }
+      }
+
+      widget.user.weeklyGoals = _goals;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Saved: $successful goals. Skipped: $skipped goals.')),
+      );
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to save goals. Try again.')),
+      );
+    }
   }
 
   @override
@@ -37,34 +114,30 @@ class _GoalPageState extends State<GoalPage> {
         backgroundColor: const Color.fromARGB(255, 48, 112, 76),
         title: const Text('RTT'),
         centerTitle: true,
-        titleTextStyle: TextStyle(
+        titleTextStyle: const TextStyle(
           fontSize: 30,
           color: Colors.white,
           fontWeight: FontWeight.bold,
         ),
         leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context); // First, go back
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => HomePage(user: widget.user),
-              ),
-            ); // Then, navigate to GoalPage
-          },
-          icon: Icon(
-            Icons.home,
-            color: Colors.white,
-          ), // use bar_chart for the next icon for stat page
+         onPressed: () {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (context) => HomePage(user: widget.user, refreshGoals: true),
+    ),
+  );
+}
+,
+          icon: const Icon(Icons.home, color: Colors.white),
         ),
         actions: [
           Container(
-            padding: EdgeInsets.all(6.0),
+            padding: const EdgeInsets.all(6.0),
             child: IconButton(
-              onPressed: () {
-                _saveChanges();
-              },
-              icon: Icon(Icons.save_alt_rounded, color: Colors.white),
+              onPressed: _saveChanges,
+              icon: const Icon(Icons.save_alt_rounded, color: Colors.white),
+              tooltip: 'Save Goals',
             ),
           ),
         ],
@@ -74,15 +147,14 @@ class _GoalPageState extends State<GoalPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Add a Goal...',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
-            //widget goes here...
             AddGoalWidget(
               onAddGoal: (newGoal) {
                 setState(() {
@@ -90,39 +162,37 @@ class _GoalPageState extends State<GoalPage> {
                 });
               },
             ),
-            //return AddGoalWidget()
-            Text(
+            const Text(
               'Your Goals...',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
             const SizedBox(height: 10),
-            // Use _todayGoals directly, removing Builder and the redundant list
             _goals.isEmpty
                 ? const Text(
-                  'No goals set!',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                )
+                    'No goals set!',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  )
                 : Expanded(
-                  child: ListView.builder(
-                    itemCount: _goals.length,
-                    itemBuilder: (context, index) {
-                      return GoalTile(
-                        goal: _goals[index],
-                        onDelete: () {
-                          setState(() {
-                            _goals.removeAt(
-                              index,
-                            ); // Removes goal at this index
-                          });
-                        },
-                      );
-                    },
+                    child: ListView.builder(
+                      itemCount: _goals.length,
+                      itemBuilder: (context, index) {
+                        return GoalTile(
+                          goal: _goals[index],
+                          onDelete: () async {
+                            GoalsClass deletedGoal = _goals[index];
+                            setState(() {
+                              _goals.removeAt(index);
+                            });
+                            await deleteGoalFromServer(deletedGoal);
+                          },
+                        );
+                      },
+                    ),
                   ),
-                ),
           ],
         ),
       ),
@@ -132,22 +202,15 @@ class _GoalPageState extends State<GoalPage> {
 
 class GoalTile extends StatelessWidget {
   final GoalsClass goal;
-  final VoidCallback onDelete; // Accepts a function for deletion
+  final VoidCallback onDelete;
 
-  const GoalTile({Key? key, required this.goal, required this.onDelete})
-    : super(key: key);
+  const GoalTile({Key? key, required this.goal, required this.onDelete}) : super(key: key);
 
-  //biggest mcabe's complexity c = 7
-  String _getdaystr() {
+  String _getDayStr() {
     return [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-      "Sunday",
-    ][goal.weekDay - 1];
+      "Sunday","Monday", "Tuesday", "Wednesday",
+      "Thursday", "Friday", "Saturday"
+    ][goal.weekDay];
   }
 
   @override
@@ -166,12 +229,12 @@ class GoalTile extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          "Time Cost: ${goal.timeCost} hours, ${_getdaystr()}",
+          "Time Cost: ${goal.timeCost < 10 ? (goal.timeCost * 60).toInt() : goal.timeCost.toInt()} minutes, ${_getDayStr()}",
           style: const TextStyle(color: Colors.white),
         ),
         trailing: IconButton(
           icon: const Icon(Icons.delete, color: Colors.white),
-          onPressed: onDelete, // Calls the function passed from the parent
+          onPressed: onDelete,
         ),
       ),
     );
@@ -190,7 +253,7 @@ class AddGoalWidget extends StatefulWidget {
 class _AddGoalWidgetState extends State<AddGoalWidget> {
   final TextEditingController _goalController = TextEditingController();
   final TextEditingController _timeCostController = TextEditingController();
-  int _selectedDay = 1; // Default to Monday
+  int _selectedDay = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -204,7 +267,6 @@ class _AddGoalWidgetState extends State<AddGoalWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Goal Input
           TextField(
             controller: _goalController,
             style: const TextStyle(color: Colors.white),
@@ -215,8 +277,6 @@ class _AddGoalWidgetState extends State<AddGoalWidget> {
             ),
           ),
           const SizedBox(height: 10),
-
-          // Time Cost Input
           TextField(
             controller: _timeCostController,
             keyboardType: TextInputType.number,
@@ -228,24 +288,17 @@ class _AddGoalWidgetState extends State<AddGoalWidget> {
             ),
           ),
           const SizedBox(height: 10),
-
-          // Day Selector Dropdown
           DropdownButton<int>(
             value: _selectedDay,
-            dropdownColor: Color.fromARGB(255, 48, 112, 76), // Match theme
+            dropdownColor: const Color.fromARGB(255, 48, 112, 76),
             style: const TextStyle(color: Colors.white),
             items: List.generate(7, (index) {
               return DropdownMenuItem<int>(
-                value: index + 1,
+                value: index,
                 child: Text(
                   [
-                    "Monday",
-                    "Tuesday",
-                    "Wednesday",
-                    "Thursday",
-                    "Friday",
-                    "Saturday",
-                    "Sunday",
+                    "Sunday", "Monday", "Tuesday", "Wednesday",
+                    "Thursday", "Friday", "Saturday"
                   ][index],
                   style: const TextStyle(color: Colors.white),
                 ),
@@ -258,8 +311,6 @@ class _AddGoalWidgetState extends State<AddGoalWidget> {
             },
           ),
           const SizedBox(height: 10),
-
-          // Add Goal Button
           Align(
             alignment: Alignment.centerRight,
             child: IconButton(
@@ -271,10 +322,10 @@ class _AddGoalWidgetState extends State<AddGoalWidget> {
                     goal: _goalController.text,
                     timeCost: double.tryParse(_timeCostController.text) ?? 0,
                     weekDay: _selectedDay,
+                    tag: 0,
                   );
                   widget.onAddGoal(newGoal);
 
-                  // Clear input fields
                   _goalController.clear();
                   _timeCostController.clear();
                   setState(() {

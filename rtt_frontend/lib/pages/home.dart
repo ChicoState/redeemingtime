@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import '../classes.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'goalpage.dart';
 import 'profiles.dart';
-import 'login.dart';
+import 'login.dart'; // for fetchGoals
+import 'package:fl_chart/fl_chart.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class HomePage extends StatefulWidget {
   final UserClass user;
-  HomePage({required this.user});
+  final bool refreshGoals;
+
+  HomePage({required this.user, this.refreshGoals = false});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -18,23 +22,54 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-    _loadTodayGoals();
     super.initState();
+    if (widget.refreshGoals) {
+      _refreshGoalsFromServer();
+    } else {
+      _loadTodayGoals();
+    }
+  }
+
+  void refreshTodayGoals() {
+    _loadTodayGoals();
   }
 
   void _loadTodayGoals() {
-    int today = DateTime.now().weekday;
+    int today = DateTime.now().weekday % 7; // Adjust for Sunday
     List<GoalsClass> tempGoals = [];
 
     for (GoalsClass goal in widget.user.weeklyGoals) {
-      if (goal.weekDay == today) {
+      if (goal.weekDay == today && goal.completed == false) {
         tempGoals.add(goal);
       }
     }
 
     setState(() {
-      _todayGoals.addAll(tempGoals);
+      _todayGoals = tempGoals;
     });
+  }
+
+  Future<void> _refreshGoalsFromServer() async {
+    try {
+      List<GoalsClass> updatedGoals =
+          await fetchGoals(widget.user.username, widget.user.password);
+      if (!mounted) return;
+      widget.user.weeklyGoals = updatedGoals;
+      _loadTodayGoals();
+    } catch (e) {
+      print("Failed to refresh goals: $e");
+    }
+  }
+
+  List<double> buildWeeklyStats(List<GoalsClass> goals) {
+    List<double> stats = List.filled(7, 0.0); // Monday to Sunday
+    for (var goal in goals) {
+      if (goal.completed) {
+        int index = goal.weekDay % 7;
+        stats[index] += goal.timeCost/60;
+      }
+    }
+    return stats;
   }
 
   Future<void> _confirmLogout() async {
@@ -80,8 +115,7 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.all(6.0),
           child: IconButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
+              Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
                   builder: (context) => GoalPage(user: widget.user),
@@ -93,39 +127,22 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         actions: [
-          Container(
-            padding: const EdgeInsets.all(6.0),
-            child: IconButton(
-              onPressed: _confirmLogout, //logout confirm
-              icon: const Icon(Icons.logout, color: Colors.white),
-              tooltip: 'Logout',
-            ),
+          IconButton(
+            onPressed: _confirmLogout,
+            icon: const Icon(Icons.logout, color: Colors.white),
+            tooltip: 'Logout',
           ),
-          Container(
-            padding: const EdgeInsets.all(6.0),
-            child: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ProfilePage(user: widget.user),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.people, color: Colors.white),
-              tooltip: 'Profile',
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(6.0),
-            child: IconButton(
-              onPressed: () {
-                // Future: open menu
-              },
-              icon: const Icon(Icons.menu, color: Colors.white),
-              tooltip: 'Menu',
-            ),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfilePage(user: widget.user),
+                ),
+              );
+            },
+            icon: const Icon(Icons.people, color: Colors.white),
+            tooltip: 'Profile',
           ),
         ],
       ),
@@ -135,7 +152,7 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              '10-Week Statistics...',
+              'Week Statistics...',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -148,9 +165,7 @@ class _HomePageState extends State<HomePage> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16.0),
               ),
-              child: BarChartWidget(
-                data: widget.user.weeklyHoursStats,
-              ),
+              child: BarChartWidget(data: buildWeeklyStats(widget.user.weeklyGoals)),
             ),
             const Text(
               'Daily Goals...',
@@ -170,98 +185,15 @@ class _HomePageState extends State<HomePage> {
                     child: ListView.builder(
                       itemCount: _todayGoals.length,
                       itemBuilder: (context, index) {
-                        return DailyGoalTile(goal: _todayGoals[index]);
+                        return DailyGoalTile(
+                          goal: _todayGoals[index],
+                          user: widget.user,
+                          onGoalUpdated: refreshTodayGoals,
+                        );
                       },
                     ),
                   ),
-            Center(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 48, 112, 76),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Future: submit goals
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                    child: Text(
-                      "Submit",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class DailyGoalTile extends StatefulWidget {
-  final GoalsClass goal;
-
-  const DailyGoalTile({Key? key, required this.goal}) : super(key: key);
-
-  @override
-  _DailyGoalTileState createState() => _DailyGoalTileState();
-}
-
-class _DailyGoalTileState extends State<DailyGoalTile> {
-  late bool _isCompleted;
-
-  @override
-  void initState() {
-    super.initState();
-    _isCompleted = widget.goal.completed;
-  }
-
-  void _toggleCompletion() {
-    setState(() {
-      _isCompleted = !_isCompleted;
-      widget.goal.completed = _isCompleted;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: const Color.fromARGB(255, 48, 112, 76),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      child: ListTile(
-        leading: const Icon(Icons.arrow_forward_ios, color: Colors.white),
-        title: Text(
-          widget.goal.goal,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-            color: Colors.white,
-          ),
-        ),
-        subtitle: Text(
-          "Time Cost: ${widget.goal.timeCost} hours",
-          style: const TextStyle(color: Colors.white),
-        ),
-        trailing: IconButton(
-          icon: Icon(
-            _isCompleted ? Icons.check_box : Icons.check_box_outline_blank,
-            color: _isCompleted ? Colors.white : Colors.white,
-          ),
-          onPressed: _toggleCompletion,
         ),
       ),
     );
@@ -281,17 +213,35 @@ class BarChartWidget extends StatelessWidget {
         BarChartData(
           barTouchData: BarTouchData(
             touchTooltipData: BarTouchTooltipData(
-              getTooltipItem: (group, groupIndex, rod, rodIndex) => null,
+              getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem(
+                '${_dayLabels[group.x]}\n${rod.toY.toInt()} hour',
+                const TextStyle(color: Colors.white),
+              ),
             ),
           ),
           barGroups: _buildBarGroups(),
           borderData: FlBorderData(show: false),
           titlesData: FlTitlesData(
             leftTitles: AxisTitles(
-              sideTitles: SideTitles(showTitles: true, reservedSize: 40),
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 40,
+                getTitlesWidget: (value, meta) => Text('${value.toInt()}'),
+              ),
+              axisNameWidget: const Text('Hours', style: TextStyle(fontSize: 12)),
+              axisNameSize: 30,
             ),
             bottomTitles: AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  int index = value.toInt();
+                  return Text(
+                    _dayLabels[index % 7],
+                    style: const TextStyle(fontSize: 10),
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -313,5 +263,125 @@ class BarChartWidget extends StatelessWidget {
         ],
       );
     });
+  }
+}
+
+const List<String> _dayLabels = [
+  'Sun','Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'
+];
+
+class DailyGoalTile extends StatefulWidget {
+  final GoalsClass goal;
+  final UserClass user;
+  final VoidCallback onGoalUpdated;
+
+  const DailyGoalTile({Key? key, required this.goal, required this.user, required this.onGoalUpdated}) : super(key: key);
+
+  @override
+  _DailyGoalTileState createState() => _DailyGoalTileState();
+}
+
+class _DailyGoalTileState extends State<DailyGoalTile> {
+  late bool _isCompleted;
+
+  @override
+  void initState() {
+    super.initState();
+    _isCompleted = widget.goal.completed;
+  }
+
+  Future<void> deleteGoalFromServer(String goalName) async {
+    final String baseUrl = "http://localhost:8000";
+    final username = widget.user.username;
+    final password = widget.user.password;
+    String basicAuth = 'Basic ' + base64Encode(utf8.encode('$username:$password'));
+
+    final encodedName = Uri.encodeComponent(goalName);
+    final url = Uri.parse('$baseUrl/goals/$encodedName/');
+
+    final response = await http.delete(url, headers: {
+      "Authorization": basicAuth,
+    });
+
+    if (response.statusCode != 204) {
+      throw Exception("Failed to delete goal");
+    }
+  }
+
+  Future<void> saveGoalToServer(GoalsClass goal) async {
+    final String baseUrl = "http://localhost:8000";
+    final username = widget.user.username;
+    final password = widget.user.password;
+    String basicAuth = 'Basic ' + base64Encode(utf8.encode('$username:$password'));
+
+    final response = await http.post(
+      Uri.parse("$baseUrl/goals/"),
+      headers: {
+        "Authorization": basicAuth,
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "name": goal.goal,
+        "description": goal.goal,
+        "timeCost": (goal.timeCost).toInt(),
+        "weekday": goal.weekDay,
+        "completed": goal.completed,
+        "tag": "none",
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to save goal");
+    }
+  }
+
+  void _toggleCompletion() async {
+    setState(() {
+      _isCompleted = !_isCompleted;
+      widget.goal.completed = _isCompleted;
+    });
+
+    try {
+      await deleteGoalFromServer(widget.goal.goal);
+      await saveGoalToServer(widget.goal);
+      widget.onGoalUpdated();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Goal updated: ${widget.goal.goal}")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error updating goal. Try again.")),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: const Color.fromARGB(255, 48, 112, 76),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      child: ListTile(
+        leading: const Icon(Icons.arrow_forward_ios, color: Colors.white),
+        title: Text(
+          widget.goal.goal,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+          ),
+        ),
+        subtitle: Text(
+          "Time Cost: ${widget.goal.timeCost} minutes",
+          style: const TextStyle(color: Colors.white),
+        ),
+        trailing: IconButton(
+          icon: Icon(
+            _isCompleted ? Icons.check_box : Icons.check_box_outline_blank,
+            color: Colors.white,
+          ),
+          onPressed: _toggleCompletion,
+        ),
+      ),
+    );
   }
 }
